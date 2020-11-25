@@ -1,15 +1,15 @@
 const container = document.querySelector('.container')
+const buttons = document.querySelectorAll('button')
 const openSecondGeneration = document.querySelector('.open-second-generation')
 const openThirdGeneration = document.querySelector('.open-third-generation')
 const openFourthGeneration = document.querySelector('.open-fourth-generation')
-const openFifthGeneration = document.querySelector('.open-fifth-generation')
-const openSixthGeneration = document.querySelector('.open-sixth-generation')
 const formSearch = document.querySelector('.form-search')
 const inputSearch = document.querySelector('.search')
 const btnSearch = document.querySelector('.btn-search')
 const filterPageContainer = document.querySelector('.filter-page-container')
 const filterPage = document.querySelector('.filter-page')
 const filterInput = document.querySelector('#select-type')
+const load = document.querySelector('.load')
 
 
 const colorType = {
@@ -140,81 +140,53 @@ const principalPokemonContainer = (id, name, type, hp, attack, defense, speed, s
 const getPokemonAttribute = (atribute, pokemon) => pokemon.getAttribute(atribute)
 
 
-const showPokemons = async (firstPokemonGet, lastPokemonGet, btnGenerationHide, btnGenerationShow) => {
+const showPokemons = async (firstPokemonGet, lastPokemonGet, buttonShow) => {
 
     requestArray = []
     for (let i = firstPokemonGet; i <= lastPokemonGet; i++) {
-        requestArray.push(await fetch(`https://pokeapi.co/api/v2/pokemon/${i}`))
+        requestArray.push(await (await fetch(`https://pokeapi.co/api/v2/pokemon/${i}`)).json())
     }
     
+    Promise.all(requestArray)
+    .then(async promises => promises.reduce((acc, pokemon) => {
+        const hp = pokemon.stats[0].base_stat
+        const attack = pokemon.stats[1].base_stat
+        const defense = pokemon.stats[2].base_stat
+        const specialAttack = pokemon.stats[3].base_stat
+        const specialDefense = pokemon.stats[4].base_stat
+        const speed = pokemon.stats[5].base_stat
+        const height = pokemon.height
+        const typeOne = pokemon.types[0].type.name
+        const typeTwo = pokemon.types === 2 ? pokemon.types[1].type.name : false
+        const weight = pokemon.weight
+        const id = pokemon.id
+        const name = pokemon.name
+        const bgColor = colorType[typeOne]
+        const pokemonMessage = pokemon.types === 2 ? `${pokemon.types[0].type.name} | ${pokemon.types[1].type.name}` : pokemon.types[0].type.name
+        load.style.display = "none"
 
-
-    requestArray.forEach(async item => {
-        let pokemon = await item.json()
-        const getStats = index => pokemon.stats[index].base_stat
-
-        const bgColor = colorType[pokemon.types[0].type.name]
-        let pokemonMessage
-        const hp = getStats(0)
-        const attack = getStats(1)
-        const defense = getStats(2)
-        const specialAttack = getStats(3)
-        const specialDefense = getStats(4)
-        const speed = getStats(5)
-        let typeTwo = ''
-       
-        if (pokemon.types.length >= 2) {
-            typeTwo = pokemon.types[1].type.name
+        if (buttonShow) {
+          buttonShow.style.display = "block"
         }
-
-  
-        const setAtrributes = () => 
-            `hp-pokemon = ${hp} attack-pokemon = ${attack} defense-pokemon = ${defense} special-attack-pokemon = ${specialAttack} special-defense-pokemon = ${specialDefense} speed-pokemon = ${speed} heigth-pokemon = ${pokemon.height} type-pokemon = ${pokemon.types[0].type.name} type-two-pokemon = ${typeTwo} weigth-pokemon = ${pokemon.weight} id-pokemon = ${pokemon.id} name-pokemon = ${pokemon.name}`
-
-        if (pokemon.types.length === 2) {
-            pokemonMessage = `${pokemon.types[0].type.name} <span class="spacing">|</span> ${pokemon.types[1].type.name}`
-        } else {pokemonMessage = pokemon.types[0].type.name}
-       
         
-        container.innerHTML += `<div onclick="showStatus(event)" ${setAtrributes()}  style="background-color: ${bgColor}" class="${pokemon.name}  pokemon-wrapper">
+        const setAtrributes = () => 
+        `hp-pokemon = ${hp} attack-pokemon = ${attack} defense-pokemon = ${defense} special-attack-pokemon = ${specialAttack} special-defense-pokemon = ${specialDefense} speed-pokemon = ${speed} heigth-pokemon = ${height} type-pokemon = ${typeOne} type-two-pokemon = ${typeTwo} weigth-pokemon = ${weight} id-pokemon = ${id} name-pokemon = ${name}`  
+
+        acc += `<div onclick="showStatus(event)" ${setAtrributes()}  style="background-color: ${bgColor}" class="${name}  pokemon-wrapper">
         <div class="pokemon-image" ${setAtrributes()}>
-            <img  src="./images/${pokemon.id}.png" alt="" ${setAtrributes()}>
+            <img  src="./images/${id}.png" alt="" ${setAtrributes()}>
         </div><!--pokemon-image-->
         <div ${setAtrributes()}  class="pokemon-info">
-            <p  class="pokemon-name"${setAtrributes()}><span class="pokemon-number" ${setAtrributes()}>${pokemon.id}.</span>${pokemon.name}</p><!--pokemon-name-->
+            <p  class="pokemon-name"${setAtrributes()}><span class="pokemon-number" ${setAtrributes()}>${id}.</span>${name}</p><!--pokemon-name-->
             <p  class="pokemon-type" ${setAtrributes()}>${pokemonMessage}</p>
         </div><!--pokemon-info-->
         </div><!--pokemon-wrapper-->
-        
-        `
-    })
-    
-    btnGenerationHide.style.display = "none"
-    btnGenerationShow.style.display = "block"
+         `
+
+         return acc
+    }, '')).then(pokemons => container.innerHTML += pokemons)
+      
 }
-
-openSecondGeneration.addEventListener('click', () => showPokemons(152, 251, openSecondGeneration, openThirdGeneration)) 
-openThirdGeneration.addEventListener('click', () => showPokemons(252, 386, openThirdGeneration, openFourthGeneration)) 
-openFourthGeneration.addEventListener('click', () => showPokemons(387, 493,  openFourthGeneration))  
-
-formSearch.addEventListener('submit', event => {
-    event.preventDefault()
-
-
-})
-
-
-inputSearch.addEventListener('input', event => {
-    const containerChildren = Array.from(container.children)
-    
-    containerChildren.forEach(pokemonWrapper => {        
-        pokemonWrapper.classList[0].includes(inputSearch.value) 
-       ? pokemonWrapper.style.display = "flex"
-       :  pokemonWrapper.style.display = "none"
-    })
-       
-
-})
 
 const showStatus = (event) => {
     
@@ -235,7 +207,6 @@ const showStatus = (event) => {
     container.innerHTML += principalPokemonContainer(id, name, type, hp, attack, defense, speed, specialAttack, specialDefense)
 }
 
-
 const hiddenStatus = (event) => {
     
     const statusContainer = document.querySelector('.status-container')
@@ -247,9 +218,6 @@ const hiddenStatus = (event) => {
         document.body.style.overflow = "auto"
         return
     }
-
-   
-         
 }
 
 const generateFilter = () => {
@@ -268,7 +236,33 @@ const generateFilter = () => {
     })
 }
 
+const showButtonNextGenerateAndAddPokemonsInHTML = (buttonClick, buttonHidden, catchPokemonFrom, upUntil, buttonShow) => {
+    buttonClick.addEventListener('click', () => { 
+        buttonHidden.style.display = "none"
+        load.style.display = "block" 
+        buttonShow 
+        ? showPokemons(catchPokemonFrom, upUntil, buttonShow)
+        : showPokemons(catchPokemonFrom, upUntil) 
+    }) 
+}
+
 generateFilter()
+
+showButtonNextGenerateAndAddPokemonsInHTML(openSecondGeneration, openSecondGeneration, 152, 251, openThirdGeneration)
+showButtonNextGenerateAndAddPokemonsInHTML(openThirdGeneration, openThirdGeneration, 252, 386, openFourthGeneration)
+showButtonNextGenerateAndAddPokemonsInHTML(openFourthGeneration, openFourthGeneration, 387, 493)
+
+inputSearch.addEventListener('input', event => {
+    const containerChildren = Array.from(container.children)
+    
+    containerChildren.forEach(pokemonWrapper => {        
+        pokemonWrapper.classList[0].includes(inputSearch.value.toLowerCase()) 
+       ? pokemonWrapper.style.display = "flex"
+       :  pokemonWrapper.style.display = "none"
+    })
+       
+
+})
 
 filterInput.addEventListener('click', event => {
     const showFilterAndHiddenOverFlowBody = () => {

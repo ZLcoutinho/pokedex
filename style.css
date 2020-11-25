@@ -360,6 +360,20 @@ div.type-wrapper-filter{
     cursor: pointer;
 }
 
+.load {
+    width: 48px;
+    height: 48px;
+    animation: loading 1s infinite;
+    border: 6px solid #e5e5e5;
+    border-top-color: #51d4db;
+    border-radius: 50%  ;
+    position: relative;
+    left: 50%;
+    display: none;
+    z-index: 999;
+    margin-bottom: 5px;       
+}
+
 .open-third-generation{display: none}
 .open-fourth-generation{display: none}
 .open-fifth-generation{display: none}
@@ -562,3 +576,9 @@ div.type-wrapper-filter{
       transform: translateY(0);
     }
   }
+
+@keyframes loading {
+    to {
+        transform: rotate(1turn)
+    }
+}
